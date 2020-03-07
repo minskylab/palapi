@@ -1,25 +1,28 @@
 package palapi
 
-import "github.com/asdine/storm/v3"
+import (
+	"time"
 
+	"github.com/asdine/storm/v3"
+)
 
 type DefaultPersistence struct {
 	filepath string
-	db *storm.DB
+	db       *storm.DB
 }
 
-
-type WordForStorm struct {
-	ID         WordID `storm:"id"`
-	Source     SourceID
+type wordForStorm struct {
+	ID          WordID `storm:"id"`
+	LastUpdate  time.Time
+	Source      SourceID
 	Definitions []WordDefinition
-	Synonyms   map[int64]WordID
-	Antonyms   map[int64]WordID
-	Examples   []Sentence
-	Frequency  WordFrequency
+	Synonyms    map[int64]WordID
+	Antonyms    map[int64]WordID
+	Examples    []Sentence
+	Frequency   WordFrequency
 }
 
-func NewDefaultPersistence(filepath string) (Persistence, error){
+func NewDefaultPersistence(filepath string) (Persistence, error) {
 	db, err := storm.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -32,7 +35,7 @@ func NewDefaultPersistence(filepath string) (Persistence, error){
 }
 
 func (p *DefaultPersistence) SaveWord(word Word) (*Word, error) {
-	w := WordForStorm(word)
+	w := wordForStorm(word)
 	if err := p.db.Save(&w); err != nil {
 		return nil, err
 	}
@@ -42,7 +45,7 @@ func (p *DefaultPersistence) SaveWord(word Word) (*Word, error) {
 }
 
 func (p *DefaultPersistence) GetWord(word string) (*Word, error) {
-	w := new(WordForStorm)
+	w := new(wordForStorm)
 	if err := p.db.Find("ID", word, w); err != nil {
 		return nil, err
 	}
@@ -52,7 +55,7 @@ func (p *DefaultPersistence) GetWord(word string) (*Word, error) {
 }
 
 func (p *DefaultPersistence) UpdateWord(word Word) (*Word, error) {
-	w := WordForStorm(word)
+	w := wordForStorm(word)
 	if err := p.db.Update(&w); err != nil {
 		return nil, err
 	}

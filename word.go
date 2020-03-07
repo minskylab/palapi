@@ -8,12 +8,12 @@ type WordID string
 // The ID of the word is the self word.
 // synonyms and antonyms are ordered by near to the word, the near is provided by the source.
 type Word struct {
-	ID         WordID
-	LastUpdate time.Time
-	Source     SourceID
+	ID          WordID
+	LastUpdate  time.Time
+	Source      SourceID
 	Definitions []WordDefinition
-	Synonyms   map[int64]WordID
-	Antonyms   map[int64]WordID
-	Examples   []Sentence
-	Frequency  WordFrequency
+	Synonyms    map[int64]WordID
+	Antonyms    map[int64]WordID
+	Examples    []Sentence
+	Frequency   WordFrequency
 }

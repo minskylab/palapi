@@ -11,16 +11,16 @@ const Examples Feature = "examples"
 const Frequency Feature = "frequency"
 
 type Report struct {
-	Word string
-	At time.Time
-	QueryDuration time.Duration
+	Word               string
+	At                 time.Time
+	QueryDuration      time.Duration
 	ExtractionDuration time.Duration
 
 	Definitions *[]WordDefinition
-	Frequency *WordFrequency
-	Synonyms *[]string
-	Antonyms *[]string
-	Examples *[]string
+	Frequency   *WordFrequency
+	Synonyms    *[]string
+	Antonyms    *[]string
+	Examples    *[]string
 }
 
 type ProviderStatus string
@@ -32,6 +32,6 @@ const PROCESSING ProviderStatus = "processing"
 type Provider interface {
 	Source() Source
 	AvailableFeatures() []Feature
-	FindWord(word string) Report
+	FindWord(word string) (*Report, error)
 	Status() ProviderStatus
 }

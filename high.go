@@ -5,18 +5,19 @@ import (
 	"time"
 
 	"github.com/asdine/storm/v3"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
 func (m *Manager) reportWord(word string, deepest int64) (*Word, error) {
-	if deepest > m.DeepMaxExploration {
+	if deepest > m.maxExploration {
 		return nil, nil
 	}
 
 	log.WithField("deep", deepest).Infof("reporting: %s", word)
 
 	w, err := m.Persistence.GetWord(word)
-	if err == nil && !time.Now().After(w.LastUpdate.Add(m.MaxAntiquityOfWord)) {
+	if err == nil && !time.Now().After(w.LastUpdate.Add(m.maxAntiquityOfWord)) {
 		return w, nil
 	}
 
@@ -26,8 +27,8 @@ func (m *Manager) reportWord(word string, deepest int64) (*Word, error) {
 
 	// word not found or needs update
 	// providers sorted
-	sort.SliceStable(m.Providers, func(i, j int) bool {
-		return m.Providers[j].Source().Relevancy < m.Providers[i].Source().Relevancy
+	sort.SliceStable(m.providers, func(i, j int) bool {
+		return m.providers[j].Source().Relevancy < m.providers[i].Source().Relevancy
 	})
 
 	var syntheticWord Word
@@ -38,19 +39,22 @@ func (m *Manager) reportWord(word string, deepest int64) (*Word, error) {
 	examples := make([]Sentence, 0)
 	frequency := WordFrequency{}
 
-	for _, provider := range m.Providers {
+	for _, provider := range m.providers {
 		source := provider.Source()
 
 		log.WithFields(log.Fields{"source": source.Name, "relevancy": source.Relevancy}).Info("walking")
-		report := provider.FindWord(word)
+		report, err := provider.FindWord(word)
+		if err != nil {
+			return nil, errors.Wrap(err, "provider "+source.Name+" failed to report '"+word+"' word")
+		}
 
 		log.WithFields(log.Fields{
-			"word": report.Word,
+			"word":             report.Word,
 			"extract_duration": report.ExtractionDuration,
-			"query_duration": report.QueryDuration,
+			"query_duration":   report.QueryDuration,
 		}).Info("report")
 
-		for _, feature := range  provider.AvailableFeatures() {
+		for _, feature := range provider.AvailableFeatures() {
 			switch feature {
 			case Definitions:
 				for _, def := range *report.Definitions {
