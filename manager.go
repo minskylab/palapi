@@ -8,9 +8,9 @@ type Head struct {
 }
 
 type Manager struct {
-	Providers []Provider
-	DeepExploration int64
-	LastHeads []*Head
+	Providers          []Provider
+	DeepMaxExploration int64
+	LastHeads          []*Head
 
 	Persistence Persistence
 
