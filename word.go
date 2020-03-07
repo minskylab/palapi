@@ -1,5 +1,7 @@
 package palapi
 
+import "time"
+
 type WordID string
 
 // Word is an struct to wrap the basic features of a word on palapi.
@@ -7,6 +9,7 @@ type WordID string
 // synonyms and antonyms are ordered by near to the word, the near is provided by the source.
 type Word struct {
 	ID         WordID
+	LastUpdate time.Time
 	Source     SourceID
 	Definitions []WordDefinition
 	Synonyms   map[int64]WordID
