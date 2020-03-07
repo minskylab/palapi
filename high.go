@@ -16,15 +16,18 @@ func (m *Manager) reportWord(word string, deepest int64) (*Word, error) {
 
 	log.WithField("deep", deepest).Infof("reporting: %s", word)
 
-	w, err := m.Persistence.GetWord(word)
+	w, err := m.persistence.GetWord(word)
 	if err == nil && !time.Now().After(w.LastUpdate.Add(m.maxAntiquityOfWord)) {
+		// saved word
 		return w, nil
 	}
+	log.Debug("continue the analysis of the word in the storage")
 
 	if err != storm.ErrNotFound {
-		return nil, err
+		return nil, errors.Wrap(err, "persistence layer 'get' failed")
 	}
 
+	log.Debug("the word isn't in the database or need to be updated")
 	// word not found or needs update
 	// providers sorted
 	sort.SliceStable(m.providers, func(i, j int) bool {
@@ -39,10 +42,11 @@ func (m *Manager) reportWord(word string, deepest int64) (*Word, error) {
 	examples := make([]Sentence, 0)
 	frequency := WordFrequency{}
 
+	log.Debug("initialized vars ok")
 	for _, provider := range m.providers {
 		source := provider.Source()
 
-		log.WithFields(log.Fields{"source": source.Name, "relevancy": source.Relevancy}).Info("walking")
+		log.WithFields(log.Fields{"source": source.Name, "relevancy": source.Relevancy}).Debug("walking providers")
 		report, err := provider.FindWord(word)
 		if err != nil {
 			return nil, errors.Wrap(err, "provider "+source.Name+" failed to report '"+word+"' word")
@@ -52,7 +56,7 @@ func (m *Manager) reportWord(word string, deepest int64) (*Word, error) {
 			"word":             report.Word,
 			"extract_duration": report.ExtractionDuration,
 			"query_duration":   report.QueryDuration,
-		}).Info("report")
+		}).Debug("report")
 
 		for _, feature := range provider.AvailableFeatures() {
 			switch feature {
@@ -113,5 +117,9 @@ func (m *Manager) reportWord(word string, deepest int64) (*Word, error) {
 		}
 	}
 
-	return m.Persistence.SaveWord(syntheticWord)
+	return m.persistence.SaveWord(syntheticWord)
+}
+
+func (m *Manager) ReportWord(word string) (*Word, error) {
+	return m.reportWord(word, 0)
 }

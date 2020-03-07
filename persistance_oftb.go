@@ -46,7 +46,7 @@ func (p *DefaultPersistence) SaveWord(word Word) (*Word, error) {
 
 func (p *DefaultPersistence) GetWord(word string) (*Word, error) {
 	w := new(wordForStorm)
-	if err := p.db.Find("ID", word, w); err != nil {
+	if err := p.db.One("ID", word, w); err != nil {
 		return nil, err
 	}
 

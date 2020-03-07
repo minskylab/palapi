@@ -1,7 +1,7 @@
 package rae
 
 import (
-	"path"
+	"fmt"
 	"strings"
 	"time"
 
@@ -67,7 +67,7 @@ func (p *Provider) scraper(word string) ([]palapi.WordDefinition, []string, time
 		}
 		example = strings.Trim(example, " \n\\/.',")
 
-		log.WithField("example", example).Info(w.Definition)
+		log.WithField("example", example).Debug(w.Definition)
 		defs = append(defs, *w)
 		if example != "" {
 			examples = append(examples, example)
@@ -75,11 +75,16 @@ func (p *Provider) scraper(word string) ([]palapi.WordDefinition, []string, time
 	})
 
 	// c.OnHTML("div#resultados article p", func(e *colly.HTMLElement) {
-	// 	log.WithField("class", e.Attr("class")).Info(e.Text)
+	// 	log.WithField("class", e.Attr("class")).Debug(e.Text)
 	// })
 
-	err := c.Visit(path.Join(p.baseURL, strings.Trim(word, " \n\\/.',")))
-	if err != nil {
+	word = strings.Trim(word, " \n\\/.',")
+	// url := path.Join(p.baseURL, word)
+	url := fmt.Sprintf("%s/%s", strings.TrimRight(p.baseURL, "/"), word)
+
+	log.WithField("url", url).Debug("visiting url to scrap")
+
+	if err := c.Visit(url); err != nil {
 		return nil, nil, 0, errors.Wrap(err, "visit on dle.rae done bad")
 	}
 

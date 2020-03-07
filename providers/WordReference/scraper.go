@@ -1,7 +1,7 @@
 package wordreference
 
 import (
-	"path"
+	"fmt"
 	"strings"
 	"time"
 
@@ -24,7 +24,8 @@ func (p *Provider) extractByWord(word string) ([]string, []string, time.Duration
 
 	c.OnHTML("div#article .trans.clickable ul ul", func(e *colly.HTMLElement) {
 		// antonyms
-		text := strings.TrimSpace(e.Text)
+		text := strings.Replace(e.Text, "Antónimos:", "", 1)
+		text = strings.TrimSpace(text)
 		for _, s := range strings.Split(text, ", ") {
 			antonyms = append(antonyms, strings.TrimSpace(s))
 		}
@@ -33,9 +34,13 @@ func (p *Provider) extractByWord(word string) ([]string, []string, time.Duration
 	log.WithFields(log.Fields{
 		"synonyms": synonyms,
 		"antonyms": antonyms,
-	}).Info(word)
+	}).Debug(word)
 
-	url := path.Join(p.baseURL, strings.Trim(word, " ,.\\/'"))
+	// url := path.Join(p.baseURL, strings.Trim(word, " ,.\\/'"))
+	url := fmt.Sprintf("%s/%s", strings.TrimRight(p.baseURL, "/"), word)
+
+	log.WithField("url", url).Debug("visiting url to scrap")
+
 	if err := c.Visit(url); err != nil {
 		return nil, nil, 0, err
 	}
