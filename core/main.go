@@ -1,14 +1,20 @@
 package main
 
 import (
+	"github.com/k0kubun/pp"
 	"github.com/minskylab/palapi"
 	rae "github.com/minskylab/palapi/providers/RAE"
 	wordreference "github.com/minskylab/palapi/providers/WordReference"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 const DefaultDatabaseFilename = "palapi.db"
 const DatabaseFilenameKey = "DatabaseFilename"
+
+
+const DebugKey = "Debug"
 
 func main() {
 	viper.SetConfigName("config")
@@ -17,6 +23,7 @@ func main() {
 	viper.AddConfigPath(".palapi")
 
 	viper.SetDefault(DatabaseFilenameKey, DefaultDatabaseFilename)
+	viper.SetDefault(DebugKey, true)
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -24,6 +31,10 @@ func main() {
 		} else {
 			panic(err)
 		}
+	}
+
+	if viper.GetBool(DebugKey) {
+		log.SetLevel(log.DebugLevel)
 	}
 
 	storage, err := palapi.NewDefaultPersistence(viper.GetString(DatabaseFilenameKey))
@@ -53,5 +64,12 @@ func main() {
 	if err := manager.RegisterProvider(wordReferenceProvider); err != nil {
 		panic(err)
 	}
+
+	gov, err := manager.ReportWord("gobernar")
+	if err != nil {
+		panic(errors.Cause(err))
+	}
+
+	pp.Println(gov)
 
 }
