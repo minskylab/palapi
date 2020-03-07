@@ -13,7 +13,6 @@ import (
 const DefaultDatabaseFilename = "palapi.db"
 const DatabaseFilenameKey = "DatabaseFilename"
 
-
 const DebugKey = "Debug"
 
 func main() {
@@ -23,7 +22,7 @@ func main() {
 	viper.AddConfigPath(".palapi")
 
 	viper.SetDefault(DatabaseFilenameKey, DefaultDatabaseFilename)
-	viper.SetDefault(DebugKey, true)
+	viper.SetDefault(DebugKey, false)
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
