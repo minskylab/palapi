@@ -1,4 +1,4 @@
-package main
+package rae
 
 import (
 	"time"
@@ -7,9 +7,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Provider struct {
-	currentStatus palapi.ProviderStatus
-}
 
 func (p *Provider) Source() palapi.Source {
 	return  palapi.Source{
@@ -31,8 +28,9 @@ func (p *Provider) AvailableFeatures() []palapi.Feature {
 }
 
 func (p *Provider) FindWord(word string) (*palapi.Report, error) {
+	t1 := time.Now()
 	p.currentStatus = palapi.SCRAPING
-	definitions, examples, extractionDur, err := scrapRAE(word)
+	definitions, examples, extractionDur, err := p.scraper(word)
 	if err != nil {
 		return nil, errors.Wrap(err, "scrape not worked correctly")
 	}
@@ -41,7 +39,7 @@ func (p *Provider) FindWord(word string) (*palapi.Report, error) {
 	return &palapi.Report{
 		Word:               word,
 		At:                 time.Now(),
-		QueryDuration:      0,
+		QueryDuration:      time.Since(t1),
 		ExtractionDuration: extractionDur,
 		Definitions:        &definitions,
 		Frequency:          nil,
