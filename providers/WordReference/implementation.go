@@ -1,18 +1,18 @@
-package rae
+package wordreference
 
 import (
+	"strings"
 	"time"
 
 	"github.com/minskylab/palapi"
-	"github.com/pkg/errors"
 )
 
 func (p *Provider) Source() palapi.Source {
-	return palapi.Source{
-		ID:        "rae",
-		Name:      "RAE Website",
-		Relevancy: 0.7,
-		URL:       "https://dle.rae.es",
+	return palapi.Source{ // TODO: Optimize this
+		ID:        "word-reference-synonyms",
+		Name:      "Word Reference Spanish Synonyms",
+		Relevancy: 0.68,
+		URL:       "https://www.wordreference.com",
 		Metadata: map[string]string{
 			"type": "scraper",
 		},
@@ -21,30 +21,32 @@ func (p *Provider) Source() palapi.Source {
 
 func (p *Provider) AvailableFeatures() []palapi.Feature {
 	return []palapi.Feature{
-		palapi.Definitions,
-		palapi.Examples,
+		palapi.Synonyms,
+		palapi.Antonyms,
 	}
 }
 
 func (p *Provider) FindWord(word string) (*palapi.Report, error) {
+	word = strings.Trim(word, " ,.\\/'\"")
 	t1 := time.Now()
-	p.currentStatus = palapi.SCRAPING
-	definitions, examples, extractionDur, err := p.scraper(word)
-	if err != nil {
-		return nil, errors.Wrap(err, "scrape not worked correctly")
-	}
+
 	p.currentStatus = palapi.PROCESSING
-	p.currentStatus = palapi.IDLE
+	p.currentStatus = palapi.SCRAPING
+	synonyms, antonyms, duration, err := p.extractByWord(word)
+	if err != nil {
+		return nil, err
+	}
+
 	return &palapi.Report{
 		Word:               word,
 		At:                 time.Now(),
 		QueryDuration:      time.Since(t1),
-		ExtractionDuration: extractionDur,
-		Definitions:        &definitions,
+		ExtractionDuration: duration,
+		Definitions:        nil,
 		Frequency:          nil,
-		Synonyms:           nil,
-		Antonyms:           nil,
-		Examples:           &examples,
+		Synonyms:           &synonyms,
+		Antonyms:           &antonyms,
+		Examples:           nil,
 	}, nil
 }
 
