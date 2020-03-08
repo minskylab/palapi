@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/k0kubun/pp"
 	"github.com/minskylab/palapi"
-	rae "github.com/minskylab/palapi/providers/RAE"
-	wordreference "github.com/minskylab/palapi/providers/WordReference"
+	rae "github.com/minskylab/palapi/providers/rae"
+	wordreference "github.com/minskylab/palapi/providers/wordreference"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"

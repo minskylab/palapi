@@ -10,7 +10,7 @@ import (
 func (p *Provider) Source() palapi.Source {
 	return palapi.Source{
 		ID:        "rae",
-		Name:      "RAE Website",
+		Name:      "rae Website",
 		Relevancy: 0.7,
 		URL:       "https://dle.rae.es",
 		Metadata: map[string]string{

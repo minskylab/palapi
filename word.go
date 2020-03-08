@@ -10,7 +10,7 @@ type WordID string
 type Word struct {
 	ID          WordID
 	LastUpdate  time.Time
-	Sources      []SourceID
+	Sources     []SourceID
 	Definitions []WordDefinition
 	Synonyms    map[int64]WordID
 	Antonyms    map[int64]WordID
