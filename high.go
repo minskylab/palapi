@@ -2,6 +2,8 @@ package palapi
 
 import (
 	"sort"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/asdine/storm/v3"
@@ -41,8 +43,11 @@ func (m *Manager) reportWord(word string, deepest int64) (*Word, error) {
 	antonyms := make([]WordID, 0)
 	examples := make([]Sentence, 0)
 	frequency := WordFrequency{}
-
+	sources := make([]SourceID, 0)
 	log.Debug("initialized vars ok")
+
+	wg := new(sync.WaitGroup)
+
 	for _, provider := range m.providers {
 		source := provider.Source()
 
@@ -66,23 +71,34 @@ func (m *Manager) reportWord(word string, deepest int64) (*Word, error) {
 				}
 			case Synonyms:
 				for _, syn := range *report.Synonyms {
-					word, err := m.reportWord(syn, deepest+1)
-					if err != nil {
-						return nil, err
-					}
-					if word != nil {
-						synonyms = append(synonyms, word.ID)
-					}
+					wg.Add(1)
+					go func(syn string) {
+						defer wg.Done()
+						word, err := m.reportWord(syn, deepest+1)
+						if err != nil {
+							log.Error(err)
+							return
+						}
+
+						if word != nil {
+							synonyms = append(synonyms, WordID(syn))
+						}
+					}(syn)
 				}
 			case Antonyms:
 				for _, ant := range *report.Antonyms {
-					word, err := m.reportWord(ant, deepest+1)
-					if err != nil {
-						return nil, err
-					}
-					if word != nil {
-						antonyms = append(antonyms, word.ID)
-					}
+					wg.Add(1)
+					go func(ant string) {
+						defer wg.Done()
+						word, err := m.reportWord(ant, deepest+1)
+						if err != nil {
+							log.Error(err)
+							return
+						}
+						if word != nil {
+							antonyms = append(antonyms, WordID(ant))
+						}
+					}(ant)
 				}
 			case Frequency:
 				frequency = *report.Frequency
@@ -93,33 +109,39 @@ func (m *Manager) reportWord(word string, deepest int64) (*Word, error) {
 			default:
 				return nil, ErrFeatureNotExist
 			}
+
 		}
 
-		mapSynonyms := map[int64]WordID{}
-		for i, s := range synonyms {
-			mapSynonyms[int64(i)] = s
-		}
+		sources = append(sources, source.ID)
+	}
 
-		mapAntonyms := map[int64]WordID{}
-		for i, s := range antonyms {
-			mapAntonyms[int64(i)] = s
-		}
+	wg.Wait()
 
-		syntheticWord = Word{
-			ID:          WordID(word),
-			LastUpdate:  time.Now(),
-			Source:      provider.Source().ID,
-			Definitions: definitions,
-			Synonyms:    mapSynonyms,
-			Antonyms:    mapAntonyms,
-			Examples:    examples,
-			Frequency:   frequency,
-		}
+	mapSynonyms := map[int64]WordID{}
+	for i, s := range synonyms {
+		mapSynonyms[int64(i)] = s
+	}
+
+	mapAntonyms := map[int64]WordID{}
+	for i, s := range antonyms {
+		mapAntonyms[int64(i)] = s
+	}
+
+	syntheticWord = Word{
+		ID:          WordID(word),
+		LastUpdate:  time.Now(),
+		Sources:     sources,
+		Definitions: definitions,
+		Synonyms:    mapSynonyms,
+		Antonyms:    mapAntonyms,
+		Examples:    examples,
+		Frequency:   frequency,
 	}
 
 	return m.persistence.SaveWord(syntheticWord)
 }
 
 func (m *Manager) ReportWord(word string) (*Word, error) {
+	word = strings.ToLower(word)
 	return m.reportWord(word, 0)
 }

@@ -12,9 +12,9 @@ type DefaultPersistence struct {
 }
 
 type wordForStorm struct {
-	ID          WordID `storm:"id"`
+	ID          WordID `storm:"id,index"`
 	LastUpdate  time.Time
-	Source      SourceID
+	Sources     []SourceID
 	Definitions []WordDefinition
 	Synonyms    map[int64]WordID
 	Antonyms    map[int64]WordID
@@ -40,17 +40,16 @@ func (p *DefaultPersistence) SaveWord(word Word) (*Word, error) {
 		return nil, err
 	}
 
-	word = Word(w)
-	return &word, nil
+	return p.GetWord(string(w.ID))
 }
 
 func (p *DefaultPersistence) GetWord(word string) (*Word, error) {
-	w := new(wordForStorm)
-	if err := p.db.One("ID", word, w); err != nil {
+	var w wordForStorm
+	if err := p.db.One("ID", WordID(word), &w); err != nil {
 		return nil, err
 	}
 
-	wNative := Word(*w)
+	wNative := Word(w)
 	return &wNative, nil
 }
 

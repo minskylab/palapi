@@ -16,13 +16,16 @@ func (p *Provider) extractByWord(word string) ([]string, []string, time.Duration
 	t1 := time.Now()
 	c.OnHTML("div#article .trans.clickable ul li", func(e *colly.HTMLElement) {
 		// synonyms
+		if strings.Contains(e.Text, "Antónimos:") {
+			return
+		}
 		text := strings.TrimSpace(e.Text)
 		for _, s := range strings.Split(text, ", ") {
 			synonyms = append(synonyms, strings.TrimSpace(s))
 		}
 	})
 
-	c.OnHTML("div#article .trans.clickable ul ul", func(e *colly.HTMLElement) {
+	c.OnHTML("div#article .trans.clickable ul span.r", func(e *colly.HTMLElement) {
 		// antonyms
 		text := strings.Replace(e.Text, "Antónimos:", "", 1)
 		text = strings.TrimSpace(text)

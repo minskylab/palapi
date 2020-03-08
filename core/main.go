@@ -41,7 +41,7 @@ func main() {
 		panic(err)
 	}
 
-	manager, err := palapi.NewManager(storage, 2)
+	manager, err := palapi.NewManager(storage, 1)
 	if err != nil {
 		panic(err)
 	}
@@ -64,11 +64,18 @@ func main() {
 		panic(err)
 	}
 
-	gov, err := manager.ReportWord("gobernar")
+	gov, err := manager.ReportWord("desdeñoso")
 	if err != nil {
 		panic(errors.Cause(err))
 	}
 
 	pp.Println(gov)
+
+	// word, err := storage.GetWord("gobernar")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	//
+	// pp.Println(word)
 
 }
