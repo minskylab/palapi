@@ -1,11 +1,13 @@
 package main
 
 import (
-	"github.com/k0kubun/pp"
+
 	"github.com/minskylab/palapi"
-	rae "github.com/minskylab/palapi/providers/rae"
-	wordreference "github.com/minskylab/palapi/providers/wordreference"
-	"github.com/pkg/errors"
+	"github.com/minskylab/palapi/providers/rae"
+	"github.com/minskylab/palapi/providers/wordreference"
+	"github.com/minskylab/palapi/rest"
+
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -64,18 +66,12 @@ func main() {
 		panic(err)
 	}
 
-	gov, err := manager.ReportWord("desdeñoso")
+	service, err := rest.NewService(manager, 8080)
 	if err != nil {
-		panic(errors.Cause(err))
+		panic(err)
 	}
 
-	pp.Println(gov)
-
-	// word, err := storage.GetWord("gobernar")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	//
-	// pp.Println(word)
-
+	if err := service.Run(); err != nil {
+		panic(err)
+	}
 }
