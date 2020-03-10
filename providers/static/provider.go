@@ -1,10 +1,11 @@
 package static
 
 import (
-	"gopkg.in/thedevsaddam/gojsonq.v2"
 	"os"
 	"strconv"
 	"strings"
+
+	"gopkg.in/thedevsaddam/gojsonq.v2"
 
 	"github.com/minskylab/palapi"
 	"github.com/pkg/errors"

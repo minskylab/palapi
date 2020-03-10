@@ -16,7 +16,7 @@ func (m *Manager) reportWord(word string, deepest int64) (*Word, error) {
 		return nil, nil
 	}
 
-	log.WithField("deep", deepest).Infof("reporting: %s", word)
+	log.WithField("deep", deepest).Debugf("reporting: %s", word)
 
 	w, err := m.persistence.GetWord(word)
 	if err == nil && !time.Now().After(w.LastUpdate.Add(m.maxAntiquityOfWord)) {
@@ -137,6 +137,11 @@ func (m *Manager) reportWord(word string, deepest int64) (*Word, error) {
 		Examples:    examples,
 		Frequency:   frequency,
 	}
+
+	log.WithFields(log.Fields{
+		"deep": deepest,
+		"exploration": len(syntheticWord.Synonyms) + len(syntheticWord.Antonyms),
+	}).Infof("report of '%s' word completed", word)
 
 	return m.persistence.SaveWord(syntheticWord)
 }
